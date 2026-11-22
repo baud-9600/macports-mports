@@ -5,7 +5,7 @@ PortGroup           python 1.0
 
 name                zensical
 version             0.1.3
-revision            0
+revision            1
 
 categories          www
 license             MIT
@@ -37,6 +37,14 @@ depends_lib-append  port:py${python.version}-click \
                     port:py${python.version}-pymdown-extensions \
                     port:py${python.version}-yaml \
                     port:py${python.version}-zensical-ui
+
+# Upstream unconditionally imports the tomli backport, but declares
+# requires-python >= 3.11 where tomllib is part of the standard library.
+# MacPorts only provides a py36-tomli subport, so use tomllib instead.
+post-patch {
+    reinplace "s|from tomli import load as toml_load|from tomllib import load as toml_load|" \
+        ${worksrcpath}/python/zensical/config.py
+}
 
 livecheck.type      pypi
 livecheck.name      zensical

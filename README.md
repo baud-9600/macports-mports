@@ -50,6 +50,9 @@ sudo port install snapclient
 - **`zensical` uses Python 3.13.** `py-zensical-ui` is available for Python
   3.11–3.14, but the official `py-pymdown-extensions` package only exists for
   Python 3.13/3.14, so the default is 3.13.
+- **`zensical` uses the stdlib `tomllib`.** Upstream imports the `tomli`
+  backport even though it requires Python ≥ 3.11; MacPorts only ships a
+  `py36-tomli` subport, so the port patches the import.
 - **`py-zeroconf` requires Python ≥ 3.11** since version 0.154.0.
 - **`xpra` is pinned to 6.4.4.** Upstream 7.0 is available, but the port's
   build flags and `setup.py` patches target the 6.4.x tree.
