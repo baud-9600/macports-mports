@@ -1,0 +1,98 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+
+PortSystem          1.0
+PortGroup           cmake 1.1
+PortGroup           github 1.0
+
+github.setup        snapcast snapcast 0.35.0 v
+revision            0
+
+# GitHub tarball URL: https://github.com/snapcast/snapcast/archive/refs/tags/v0.35.0.tar.gz
+github.tarball_from archive
+
+checksums           rmd160  d0455f66a912798141626d94f7ef2850b16d3736 \
+                    sha256  cb75a71479bf52910bf5f47ae8120ec41c89459b0d77d7cd560e674e437ef050 \
+                    size    1179765
+
+name                snapclient
+categories          audio
+license             GPL-3
+maintainers         nomaintainer
+
+description         Synchronous multiroom audio client
+long_description    Snapclient is the client component of Snapcast, a synchronous \
+                    multiroom audio player. All clients are time-synchronized with \
+                    the server to play perfectly synced audio.
+
+homepage            https://github.com/snapcast/snapcast
+
+depends_build-append \
+                    port:pkgconfig
+
+depends_lib-append  \
+                    port:boost \
+                    port:libopus \
+                    port:flac \
+                    port:libogg \
+                    port:libvorbis \
+                    port:avahi \
+                    port:expat \
+                    port:openssl
+
+# Build only the client, not the server. CoreAudio and Bonjour are enabled
+# automatically by the upstream CMake files on Apple platforms.
+configure.args-append \
+                    -DBUILD_SERVER=OFF \
+                    -DBUILD_CLIENT=ON \
+                    -DBUILD_WITH_SSL=ON \
+                    -DBUILD_WITH_AVAHI=ON \
+                    -DBUILD_WITH_EXPAT=ON \
+                    -DBUILD_WITH_FLAC=ON \
+                    -DBUILD_WITH_OPUS=ON \
+                    -DBUILD_WITH_VORBIS=ON \
+                    -DBUILD_WITH_PULSE=OFF \
+                    -DBUILD_WITH_JACK=OFF \
+                    -DBUILD_WITH_PIPEWIRE=OFF
+
+# TargetArch.cmake in snapcast 0.35.0 does not recognize arm64 (expects aarch64)
+# Patch it before configure runs
+pre-configure {
+    reinplace "s/message(FATAL_ERROR \"Invalid OS X arch name: \${osx_arch}\")/message(STATUS \"Skipping unknown OS X arch: \${osx_arch}\")/g" \
+        ${worksrcpath}/cmake/TargetArch.cmake
+}
+
+destroot {
+    xinstall -m 755 ${worksrcpath}/bin/snapclient ${destroot}${prefix}/bin/
+    xinstall -m 644 ${worksrcpath}/client/snapclient.1 ${destroot}${prefix}/share/man/man1/
+}
+
+notes "
+To start snapclient manually, connecting to Music Assistant:
+  snapclient -h 10.0.11.106
+
+For autostart at login, create a launchd plist:
+  ~/Library/LaunchAgents/org.snapcast.snapclient.plist
+
+  <?xml version=\"1.0\" encoding=\"UTF-8\"?>
+  <!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\"
+    \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+  <plist version=\"1.0\">
+  <dict>
+    <key>Label</key>
+    <string>org.snapcast.snapclient</string>
+    <key>ProgramArguments</key>
+    <array>
+      <string>${prefix}/bin/snapclient</string>
+      <string>-h</string>
+      <string>10.0.11.106</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+  </dict>
+  </plist>
+
+Then activate with:
+  launchctl load ~/Library/LaunchAgents/org.snapcast.snapclient.plist
+"

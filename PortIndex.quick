@@ -1,0 +1,17 @@
+snapclient 0
+xpra 634
+py-zensical-ui 1504
+py-zeroconf 2028
+monkeysphere 2648
+spm 3483
+manpageblog 4052
+manpageblog-mk 4702
+py311-zensical-ui 5387
+py312-zensical-ui 5923
+py313-zensical-ui 6459
+py314-zensical-ui 6995
+py311-zeroconf 7531
+py312-zeroconf 8239
+py313-zeroconf 8947
+py314-zeroconf 9655
+zensical 10363

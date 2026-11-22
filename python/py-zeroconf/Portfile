@@ -1,0 +1,42 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+
+PortSystem          1.0
+PortGroup           python 1.0
+
+name                py-zeroconf
+version             0.154.0
+revision            0
+
+categories-append   net
+license             LGPL-2.1+
+maintainers         nomaintainer
+
+description         Pure Python multicast DNS service discovery (Bonjour/Avahi compatible)
+long_description    python-zeroconf is a pure Python implementation of multicast DNS \
+                    service discovery. It is compatible with Bonjour and Avahi and does \
+                    not require D-Bus or a specific event loop.
+
+homepage            https://github.com/python-zeroconf/python-zeroconf
+master_sites        pypi:z/zeroconf/
+
+distname            zeroconf-${version}
+
+checksums           rmd160  d516aebf818ae7e5fc21a9a6af875bc149afb78f \
+                    sha256  830315497af9bbd75924c2218cd3b64f0bde0e808ee316aabb5d9288836c0c43 \
+                    size    226489
+
+python.versions     311 312 313 314
+
+if {${name} ne ${subport}} {
+    depends_build-append \
+                    port:py${python.version}-setuptools \
+                    port:py${python.version}-poetry-core
+
+    depends_lib-append \
+                    port:py${python.version}-ifaddr
+
+    livecheck.type  none
+}
+
+livecheck.type      pypi
+livecheck.name      zeroconf

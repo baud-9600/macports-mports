@@ -1,0 +1,77 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+
+PortSystem          1.0
+
+name                monkeysphere
+version             0.44
+categories          security net
+license             GPL-3+
+maintainers         nomaintainer
+description         use the OpenPGP web of trust to verify ssh connections
+long_description    SSH key-based authentication is tried-and-true, \
+                    but it lacks a true Public Key Infrastructure for \
+                    key certification, revocation and expiration. \
+                    Monkeysphere is a framework that uses the OpenPGP \
+                    web of trust for these PKI functions.  It can be \
+                    used in both directions: for users to get \
+                    validated host keys, and for hosts to authenticate \
+                    users.
+homepage            https://web.monkeysphere.info/
+
+depends_build       port:pkgconfig \
+                    port:libassuan \
+                    port:libgcrypt
+depends_run         bin:ssh:openssh \
+                    port:gnupg2 \
+                    port:p5-crypt-openssl-rsa \
+                    port:p5-digest-sha \
+                    port:procmail \
+                    port:gsed \
+                    port:openssl
+
+master_sites        https://deb.debian.org/debian/pool/main/m/monkeysphere/
+distname            ${name}_${version}
+extract.suffix      .orig.tar.gz
+worksrcdir          ${name}-${version}
+checksums           md5     fbff63b6f30a67d3ecf58331a2da26ff \
+                    rmd160  b4f68eeb1e3255d9911b182ec97631f583f8f755 \
+                    sha256  6ac6979fa1a4a0332cbea39e408b9f981452d092ff2b14ed3549be94918707aa \
+                    size    110289
+
+use_configure       no
+
+post-build {
+    # update paths to SYS*DIRs
+    exec sed -i .tmp -e "s|/etc/monkeysphere|${prefix}/etc/monkeysphere|g" \
+        ${worksrcpath}/src/share/defaultenv \
+        ${worksrcpath}/src/transitions/0.23 \
+        ${worksrcpath}/man/man1/monkeysphere.1 \
+        ${worksrcpath}/man/man8/monkeysphere-authentication.8 \
+        ${worksrcpath}/man/man8/monkeysphere-host.8 \
+        ${worksrcpath}/etc/monkeysphere-authentication.conf
+    exec sed -i .tmp -e "s|/var/lib/monkeysphere|${prefix}/var/db/monkeysphere|g" \
+        ${worksrcpath}/src/transitions/0.23 \
+        ${worksrcpath}/man/man1/monkeysphere.1 \
+        ${worksrcpath}/man/man8/monkeysphere-authentication.8 \
+        ${worksrcpath}/man/man8/monkeysphere-host.8 \
+        ${worksrcpath}/src/monkeysphere-host \
+        ${worksrcpath}/src/monkeysphere-authentication \
+        ${worksrcpath}/doc/getting-started-admin.mdwn
+    exec sed -i .tmp -e "s|/usr/share/monkeysphere|${prefix}/share/monkeysphere|g" \
+        ${worksrcpath}/src/monkeysphere-host \
+        ${worksrcpath}/src/monkeysphere-authentication \
+        ${worksrcpath}/src/monkeysphere
+
+    # fix perl shebang line to point to macports perl install
+    exec sed -i .tmp -e "s|^#!/usr/bin/perl -T$|#!${prefix}/bin/perl -T|" \
+        ${worksrcpath}/src/share/keytrans \
+        ${worksrcpath}/src/share/checkperms
+
+    # remove leftover sed cruft
+    exec find ${worksrcpath} -name *.tmp -delete
+}
+
+destroot.destdir    DESTDIR=${destroot}${prefix}
+destroot.args       PREFIX=
+
+livecheck.type      none

@@ -1,0 +1,41 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+
+PortSystem          1.0
+
+name                spm
+version             20230306
+revision            0
+categories          security
+license             GPL-3+
+maintainers         nomaintainer
+
+description         Simple password manager in POSIX shell
+long_description    spm is a single POSIX shell script that acts as a central \
+                    password manager. Passwords are stored as rage/age encrypted \
+                    files, with directories functioning as (sub)groups. It reads \
+                    and writes passwords via standard input and output so it can \
+                    be combined with other tools such as pwgen.
+
+homepage            https://github.com/BioBox/spm
+
+# Upstream does not publish tagged releases; this is the last commit on master.
+set spm_commit      b56ef81412ba
+
+master_sites        https://github.com/BioBox/spm/archive/
+distname            spm-${spm_commit}
+distfiles           ${spm_commit}.tar.gz
+use_configure       no
+build {}
+
+checksums           rmd160  d131d170544cc9bd162a87a5dcdabaa4ca1d8c76 \
+                    sha256  c8bfe6baacabc844d944817b34f745ad138a0f2712748a1a8f8e1b99f77c2afe \
+                    size    15792
+
+depends_run         port:rage
+
+destroot {
+    xinstall -m 0755 ${worksrcpath}/spm ${destroot}${prefix}/bin/
+    xinstall -m 0644 ${worksrcpath}/spm.1 ${destroot}${prefix}/share/man/man1/
+}
+
+livecheck.type      none

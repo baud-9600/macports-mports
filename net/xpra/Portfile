@@ -1,0 +1,121 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+
+PortSystem          1.0
+PortGroup           python 1.0
+PortGroup           github 1.0
+
+github.setup        Xpra-org xpra 6.4.4 v
+github.tarball_from archive
+
+name                xpra
+version             ${github.version}
+revision            0
+
+categories          net x11
+license             GPL-2
+maintainers         nomaintainer
+
+description         Persistent remote applications for X11 (CLI tools only)
+long_description    Xpra is known as \"screen for X\": its seamless mode allows you to run \
+                    X11 programs on a remote host, direct their display to your local machine, \
+                    and reconnect without losing state. This port installs only the \
+                    command-line tools, without any GUI dependencies.
+
+homepage            https://xpra.org/
+
+checksums           rmd160  6b3da0dc6d00559e449a7ecf0837351b66d1c26d \
+                    sha256  1b196a6d147c293b0a8f7343b9d1dce22f27c613d53efa52f03d37a3b2306954 \
+                    size    12029501
+
+python.default_version  312
+
+depends_build-append \
+                    port:py${python.version}-cython \
+                    port:py${python.version}-setuptools
+
+# Core CLI dependencies (from pyproject.toml [project.optional-dependencies] cli)
+# py-uvloop and py-netifaces are optional at runtime: xpra falls back
+# gracefully when they are missing, and netifaces is deprecated upstream.
+depends_lib-append \
+                    port:py${python.version}-paramiko \
+                    port:py${python.version}-openssl \
+                    port:py${python.version}-cryptography \
+                    port:py${python.version}-socks \
+                    port:py${python.version}-zeroconf \
+                    port:py${python.version}-psutil \
+                    port:py${python.version}-setproctitle \
+                    port:py${python.version}-numpy
+
+# Optional but useful CLI dependencies
+depends_lib-append \
+                    port:py${python.version}-dnspython
+
+# Build without GUI components — only flags confirmed valid by setup.py
+build.args-append   --without-gtk3 \
+                    --without-opengl \
+                    --without-client \
+                    --without-shadow \
+                    --without-webcam
+
+post-extract {
+    # Fix cython fallback path
+    reinplace "s|/usr/local/bin/cython|${prefix}/bin/cython-${python.branch}|g" \
+        ${worksrcpath}/setup.py
+    # Disable OSX-specific gdk3/pygobject bindings (requires GTK, which we exclude)
+    reinplace "s|tace(OSX, \"xpra.platform.darwin.gdk3_bindings|tace(False, \"xpra.platform.darwin.gdk3_bindings|g" \
+        ${worksrcpath}/setup.py
+    # Disable cairo binding which requires py3cairo/GTK
+    reinplace "s|tace(client_ENABLED and gtk3_ENABLED, \"xpra.gtk.cairo_image\"|tace(False, \"xpra.gtk.cairo_image\"|g" \
+        ${worksrcpath}/setup.py
+}
+
+build.cmd           ${python.bin} setup.py
+build.target        build
+
+destroot {
+    system -W ${worksrcpath} "${python.bin} setup.py install \
+        --prefix=${python.prefix} \
+        --root=${destroot} \
+        --without-gtk3 \
+        --without-opengl \
+        --without-client \
+        --without-shadow \
+        --without-webcam"
+    # Move /etc/xpra into ${prefix}/etc/xpra to comply with MacPorts filesystem layout
+    if {[file exists ${destroot}/etc/xpra]} {
+        xinstall -d ${destroot}${prefix}/etc
+        file rename ${destroot}/etc/xpra ${destroot}${prefix}/etc/xpra
+        file delete -force ${destroot}/etc
+    }
+    # Install the xpra script into ${prefix}/bin
+    if {[file exists ${destroot}${python.prefix}/bin/xpra]} {
+        xinstall -d ${destroot}${prefix}/bin
+        file rename ${destroot}${python.prefix}/bin/xpra ${destroot}${prefix}/bin/xpra
+    }
+}
+
+post-destroot {
+    # Remove GUI-related files that may have slipped through
+    foreach f [glob -nocomplain ${destroot}${prefix}/share/applications/*.desktop] {
+        delete $f
+    }
+    foreach f [glob -nocomplain ${destroot}${prefix}/share/icons] {
+        delete -force $f
+    }
+    # Patch the xpra launcher to set XPRA_RESOURCES_DIR so the darwin paths.py
+    # does not try to load gi/GTK to find the resources directory
+    set script ${destroot}${prefix}/bin/xpra
+    if {[file exists ${script}]} {
+        reinplace "s|^import sys$|import sys; import os; os.environ.setdefault(\"XPRA_RESOURCES_DIR\", \"${prefix}/share/xpra\")|" \
+            ${script}
+    }
+}
+
+variant html5 description {Install built-in HTML5 client} {
+    depends_lib-append  port:xpra-html5
+}
+
+notes {
+    xpra CLI tools are now installed.
+    Run 'xpra --help' to see available subcommands.
+}

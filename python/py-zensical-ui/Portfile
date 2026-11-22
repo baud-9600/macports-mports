@@ -1,0 +1,35 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+
+PortSystem          1.0
+PortGroup           python 1.0
+
+name                py-zensical-ui
+version             0.0.43
+revision            0
+
+categories-append   www
+license             MIT
+maintainers         nomaintainer
+
+description         Templates and browser assets for Zensical
+long_description    zensical-ui ships the HTML templates, templates assets and \
+                    icon sets used by the Zensical static site generator.
+
+homepage            https://github.com/zensical/ui
+master_sites        pypi:z/zensical-ui/
+
+distname            zensical_ui-${version}
+
+checksums           rmd160  79fa1cc2059ac44ae80ee5b0ee61c527c1302609 \
+                    sha256  e82d161ad797fff833cd045cfa3ddb9be69f276386b78dd5a4dff76dfbd41596 \
+                    size    4078131
+
+python.versions     311 312 313 314
+python.pep517_backend hatch
+
+if {${name} ne ${subport}} {
+    livecheck.type  none
+}
+
+livecheck.type      pypi
+livecheck.name      zensical-ui

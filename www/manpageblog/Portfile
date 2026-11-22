@@ -1,0 +1,76 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+
+PortSystem          1.0
+PortGroup           github 1.0
+PortGroup           python 1.0
+
+github.setup        baud-9600 manpageblog 1.9
+revision            0
+github.tarball_from archive
+
+categories          www
+license             MIT
+maintainers         nomaintainer
+
+description         Static site generator that renders a site in man page layout
+long_description    {*}${description}. manpageblog is a small, lightweight \
+                    blog engine written in Python. Pages and posts are plain \
+                    Markdown or HTML files, no database is needed, and the \
+                    generated static site is styled like a Unix manual page.
+
+homepage            https://github.com/baud-9600/manpageblog
+
+checksums           rmd160  eaf281aac66d118a1d630f05e84f4064e9c8e695 \
+                    sha256  b6c1559dfeb47223121823fb3b4d7bf7ca1ccbeecf78695c52fe02d69923233e \
+                    size    22637
+
+supported_archs     noarch
+
+depends_lib         port:py${python.version}-markdown-it-py \
+                    port:py${python.version}-mdit-py-plugins
+
+use_configure       no
+
+python.pep517        no
+
+build {}
+
+post-patch {
+    reinplace "s|^#!/usr/bin/env python3|#!${prefix}/bin/python${python.branch}|" \
+        ${worksrcpath}/${name}
+}
+
+destroot {
+    xinstall -m 0755 ${worksrcpath}/${name} ${destroot}${prefix}/bin/
+
+    # the script resolves content, template_path and assets relative to the
+    # working directory, so install a complete example tree that can be copied
+    set skel ${destroot}${prefix}/share/${name}/skeleton
+    xinstall -d -m 0755 ${skel}
+    xinstall -m 0644 ${worksrcpath}/blog.conf ${skel}
+    copy ${worksrcpath}/_assets ${skel}
+    copy ${worksrcpath}/_templates ${skel}
+    copy ${worksrcpath}/content ${skel}
+
+    xinstall -d -m 0755 ${destroot}${prefix}/share/doc/${name}
+    xinstall -m 0644 ${worksrcpath}/README.md ${worksrcpath}/CHANGELOG.md \
+        ${worksrcpath}/LICENSE.md ${destroot}${prefix}/share/doc/${name}
+}
+
+notes "
+manpageblog renders a static website from Markdown or HTML files.
+Start a new site by copying the bundled example tree and running
+manpageblog from inside it:
+
+    cp -R ${prefix}/share/${name}/skeleton ~/mysite
+    cd ~/mysite
+    manpageblog
+
+Pages live in content/*.md, blog posts in content/blog/<date>-<slug>.md,
+and the optional static/ directory is copied to the output root.
+The generated site is written to ./docroot; preview it with:
+
+    python3 -m http.server --directory docroot
+"
+
+livecheck.regex     {archive/refs/tags/v?(\d+(?:\.\d+)*)\.tar\.gz}
