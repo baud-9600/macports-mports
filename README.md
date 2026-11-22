@@ -1,9 +1,9 @@
-# macports-ports
+# macports-mports
 
 A small, hand-maintained [MacPorts](https://www.macports.org/) port overlay.
 
 The overlay contains only ports that are not already available in the official
-`macports/macports-ports` tree, plus a few local variants. Ports that duplicate
+MacPorts ports tree, plus a few local variants. Ports that duplicate
 the official tree were deliberately removed so that they cannot shadow newer
 upstream versions.
 
@@ -12,16 +12,16 @@ upstream versions.
 Clone the repository, index it once, and add it as a local (non-syncing) source:
 
 ```sh
-git clone https://github.com/baud-9600/macports-ports.git ~/macports-ports
-cd ~/macports-ports && portindex
+git clone https://github.com/baud-9600/macports-mports.git ~/macports-mports
+cd ~/macports-mports && portindex
 
-echo "file://$HOME/macports-ports [nosync]" | sudo tee -a /opt/local/etc/macports/sources.conf
+echo "file://$HOME/macports-mports [nosync]" | sudo tee -a /opt/local/etc/macports/sources.conf
 ```
 
 After editing a Portfile, regenerate the index:
 
 ```sh
-cd ~/macports-ports && portindex
+cd ~/macports-mports && portindex
 ```
 
 Then install ports as usual, for example:
