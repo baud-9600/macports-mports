@@ -1,4 +1,4 @@
-# macports-mports
+# MacPorts port overlay
 
 A small, hand-maintained [MacPorts](https://www.macports.org/) port overlay.
 
